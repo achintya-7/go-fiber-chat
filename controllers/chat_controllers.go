@@ -230,6 +230,7 @@ func GetAllMessages(c *fiber.Ctx) error {
 		})
 }
 
+
 func GetAllChats(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	userId := c.Params("userId")
