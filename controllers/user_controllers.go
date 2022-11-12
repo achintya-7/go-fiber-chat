@@ -46,7 +46,7 @@ func CreateUser(c *fiber.Ctx) error {
 
 	}
 
-	return c.Status(http.StatusCreated).JSON(responses.UserResponse{Status: http.StatusCreated, Message: "success", Data: &fiber.Map{"data": result}})
+	return c.Status(http.StatusCreated).JSON(responses.UserResponse{Status: http.StatusCreated, Message: "success", Data: &fiber.Map{"data": newUser, "result": result}})
 }
 
 func SignInUser(c *fiber.Ctx) error {

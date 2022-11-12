@@ -102,10 +102,10 @@ func AddToGroup(c *fiber.Ctx) error {
 			Key: "$addToSet",
 			Value: bson.D{
 				{
-					Key:   "users",
+					Key: "users",
 					Value: bson.D{
 						{
-							Key: "$each", 
+							Key:   "$each",
 							Value: req.Users,
 						},
 					},
@@ -286,6 +286,73 @@ func GetAllChats(c *fiber.Ctx) error {
 			Data: &fiber.Map{
 				"data":  chats,
 				"index": i,
+			},
+		})
+}
+
+func GetAllChats2(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	userId := c.Params("userId")
+	defer cancel()
+
+	// var chats []models.CreateChatRes
+
+	objId, _ := primitive.ObjectIDFromHex(userId)
+
+	showLoadedCursor, err := chatCollection.Aggregate(ctx, mongo.Pipeline{
+		{
+			{
+				Key:   "$match",
+				Value: bson.D{{Key: "users", Value: objId}},
+			},
+		},
+		{
+			{
+				Key: "$lookup",
+				Value: bson.D{
+					{Key: "from", Value: "users"},
+					{Key: "localField", Value: "users"},
+					{Key: "foreignField", Value: "id"},
+					{Key: "as", Value: "users_info"},
+				},
+			},
+		},
+		{
+			{
+				Key: "$project",
+				Value: bson.D{
+					{Key: "users_info.password", Value: 0},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return c.Status(400).JSON(
+			responses.UserResponse{
+				Status:  400,
+				Message: err.Error(),
+				Data:    &fiber.Map{},
+			})
+	}
+
+	var showsLoaded []bson.M
+	if err = showLoadedCursor.All(ctx, &showsLoaded); err != nil {
+		return c.Status(400).JSON(
+			responses.UserResponse{
+				Status:  400,
+				Message: err.Error(),
+				Data:    &fiber.Map{},
+			})
+	}
+
+	messageRes := fmt.Sprintf("%d Chats were found", len(showsLoaded))
+
+	return c.Status(200).JSON(
+		responses.UserResponse{
+			Status:  200,
+			Message: messageRes,
+			Data: &fiber.Map{
+				"data": showsLoaded,
 			},
 		})
 }

@@ -10,6 +10,7 @@ func ChatRoute(app *fiber.App) {
 	app.Put("/add_to_group", controllers.AddToGroup)
 	app.Delete("/delete_from_group", controllers.DeleteFromGroup)
 	app.Get("/get_all_chats/:userId", controllers.GetAllChats)
+	app.Get("/get_all_chats2/:userId", controllers.GetAllChats2)
 	app.Get("/get_all_messages/:chatId", controllers.GetAllMessages)
 	app.Post("/create_group_chat", controllers.CreateGroupChat)
 }
