@@ -235,66 +235,6 @@ func GetAllChats(c *fiber.Ctx) error {
 	userId := c.Params("userId")
 	defer cancel()
 
-	var chats []models.CreateChatRes
-
-	objId, _ := primitive.ObjectIDFromHex(userId)
-
-	results, err := chatCollection.Find(ctx, bson.D{{Key: "users", Value: objId}})
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(
-			responses.UserResponse{
-				Status:  http.StatusInternalServerError,
-				Message: "Database Error",
-				Data: &fiber.Map{
-					"data": &fiber.Map{},
-				},
-			})
-	}
-
-	defer results.Close(ctx)
-
-	i := 0
-
-	for results.Next(ctx) {
-		i++
-		var singleChat models.CreateChatRes
-		if err = results.Decode(&singleChat); err != nil {
-			fmt.Println(err)
-			continue
-		}
-		chats = append(chats, singleChat)
-	}
-
-	if len(chats) < 1 {
-		return c.Status(401).JSON(
-			responses.UserResponse{
-				Status:  401,
-				Message: "No Chats were found",
-				Data: &fiber.Map{
-					"data": chats,
-				},
-			})
-
-	}
-
-	messageRes := fmt.Sprintf("%d Chats were found", len(chats))
-
-	return c.Status(200).JSON(
-		responses.UserResponse{
-			Status:  200,
-			Message: messageRes,
-			Data: &fiber.Map{
-				"data":  chats,
-				"index": i,
-			},
-		})
-}
-
-func GetAllChats2(c *fiber.Ctx) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	userId := c.Params("userId")
-	defer cancel()
-
 	// var chats []models.CreateChatRes
 
 	objId, _ := primitive.ObjectIDFromHex(userId)
