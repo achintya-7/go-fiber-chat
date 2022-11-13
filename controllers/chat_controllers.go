@@ -33,7 +33,7 @@ func CreateChat(c *fiber.Ctx) error {
 		})
 	}
 
-	chatFilter := bson.D{{Key: "users", Value: bson.A{chat.UserId, chat.SecondUserId}}}
+	chatFilter := bson.D{{Key: "users", Value: bson.D{{Key: "$all", Value: bson.A{chat.UserId, chat.SecondUserId}}}}, {Key: "isgroup", Value: false}}
 	isChat := chatCollection.FindOne(ctx, chatFilter)
 
 	// no document was found
@@ -230,7 +230,6 @@ func GetAllMessages(c *fiber.Ctx) error {
 		})
 }
 
-
 func GetAllChats(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	userId := c.Params("userId")
@@ -254,7 +253,7 @@ func GetAllChats(c *fiber.Ctx) error {
 					{Key: "from", Value: "users"},
 					{Key: "localField", Value: "users"},
 					{Key: "foreignField", Value: "id"},
-					{Key: "as", Value: "users_info"},
+					{Key: "as", Value: "users"},
 				},
 			},
 		},
@@ -262,7 +261,14 @@ func GetAllChats(c *fiber.Ctx) error {
 			{
 				Key: "$project",
 				Value: bson.D{
-					{Key: "users_info.password", Value: 0},
+					{Key: "chatid", Value: 1},
+					{Key: "chatname", Value: 1},
+					{Key: "isgroup", Value: 1},
+					{Key: "latestmessage", Value: 1},
+					{Key: "latestmessageid", Value: 1},
+					{Key: "userid", Value: 1},
+					{Key: "users.id", Value: 1},
+					{Key: "users.name", Value: 1},
 				},
 			},
 		},
@@ -276,8 +282,8 @@ func GetAllChats(c *fiber.Ctx) error {
 			})
 	}
 
-	var showsLoaded []bson.M
-	if err = showLoadedCursor.All(ctx, &showsLoaded); err != nil {
+	var chatsLoaded []models.CreateChatRes2
+	if err = showLoadedCursor.All(ctx, &chatsLoaded); err != nil {
 		return c.Status(400).JSON(
 			responses.UserResponse{
 				Status:  400,
@@ -286,14 +292,25 @@ func GetAllChats(c *fiber.Ctx) error {
 			})
 	}
 
-	messageRes := fmt.Sprintf("%d Chats were found", len(showsLoaded))
+	for i := 0; i < len(chatsLoaded); i++ {
+		// if the chat is not a group chat, rename the chat name to the other user's name
+		if !chatsLoaded[i].IsGroup {
+			if chatsLoaded[i].Users[0].Id == objId {
+				chatsLoaded[i].ChatName = chatsLoaded[i].Users[1].Name
+			} else {
+				chatsLoaded[i].ChatName = chatsLoaded[i].Users[0].Name
+			}
+		}
+	}
+
+	messageRes := fmt.Sprintf("%d Chats were found", len(chatsLoaded))
 
 	return c.Status(200).JSON(
 		responses.UserResponse{
 			Status:  200,
 			Message: messageRes,
 			Data: &fiber.Map{
-				"data": showsLoaded,
+				"data": chatsLoaded,
 			},
 		})
 }

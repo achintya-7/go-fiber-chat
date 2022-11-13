@@ -2,6 +2,10 @@ package models
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
+type UserInfo struct {
+	Id   primitive.ObjectID `json:"id"`
+	Name string             `json:"name"`
+}
 type CreateChatReq struct {
 	UserId       primitive.ObjectID `json:"userId"`
 	SecondUserId primitive.ObjectID `json:"secondUserId"`
@@ -19,6 +23,16 @@ type CreateChatRes struct {
 
 type GetAllChatsReq struct {
 	UserId primitive.ObjectID `json:"userId"`
+}
+
+type CreateChatRes2 struct {
+	ChatId          primitive.ObjectID `json:"chatId"`
+	Users           []UserInfo         `json:"users"`
+	IsGroup         bool               `json:"isGroup"`
+	LatestMessage   string             `json:"latestMessage"`
+	LatestMessageId string             `json:"latestMessageId"`
+	UserId          primitive.ObjectID `json:"userId"`
+	ChatName        string             `json:"chatName"`
 }
 
 type GetAllChatsRes struct {

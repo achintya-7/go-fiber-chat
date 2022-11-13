@@ -15,7 +15,10 @@ func ConnectDB() *mongo.Client {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	defer cancel()
+
 	err = client.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -26,16 +29,20 @@ func ConnectDB() *mongo.Client {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	fmt.Println("Connected to MongoDB")
 	return client
 }
 
-//Client instance
+// Client instance
 var DB *mongo.Client = ConnectDB()
 
-//getting database collections
+// getting database collections
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database("test").Collection(collectionName)
+	dbName := GetEnv("DB_NAME")
+	if dbName == "" {
+		log.Fatal("No database name found in env file")
+	}
+	collection := client.Database(dbName).Collection(collectionName)
 	return collection
 }
