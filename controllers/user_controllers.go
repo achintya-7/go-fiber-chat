@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+
+	"github.com/dgrijalva/jwt-go"
 	"github.com/achintya-7/go-fiber-chat/configs"
 	"github.com/achintya-7/go-fiber-chat/models"
 	"github.com/achintya-7/go-fiber-chat/responses"
@@ -33,11 +35,21 @@ func CreateUser(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(responses.UserResponse{Status: http.StatusBadRequest, Message: "error", Data: &fiber.Map{"data": validationErr.Error()}})
 	}
 
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	s, err := token.SignedString([]byte(configs.GetJWTSecret()))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(responses.UserResponse{Status: http.StatusInternalServerError, Message: "error", Data: &fiber.Map{"data": err.Error()}})	
+	}
+
 	newUser := models.User{
 		Id:       primitive.NewObjectID(),
 		Name:     user.Name,
 		Email:    user.Email,
 		Password: models.SetPassword2(user.Password),
+		Token: s,
 	}
 
 	result, err := userCollection.InsertOne(ctx, newUser)
@@ -171,6 +183,8 @@ func DeleteAUser(c *fiber.Ctx) error {
 }
 
 func GetAllUsers(c *fiber.Ctx) error {
+	fmt.Println(c.AllParams())
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	var users []models.User
 	defer cancel()

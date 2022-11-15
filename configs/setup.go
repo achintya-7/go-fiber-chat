@@ -37,6 +37,10 @@ func ConnectDB() *mongo.Client {
 // Client instance
 var DB *mongo.Client = ConnectDB()
 
+func GetJWTSecret() string {
+	return GetEnv("SECRET_TOKEN")
+}
+
 // getting database collections
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
 	dbName := GetEnv("DB_NAME")

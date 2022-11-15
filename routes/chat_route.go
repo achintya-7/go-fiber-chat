@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/achintya-7/go-fiber-chat/controllers"
+	"github.com/achintya-7/go-fiber-chat/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -12,4 +13,5 @@ func ChatRoute(app *fiber.App) {
 	app.Get("/get_all_chats/:userId", controllers.GetAllChats)
 	app.Get("/get_all_messages/:chatId", controllers.GetAllMessages)
 	app.Post("/create_group_chat", controllers.CreateGroupChat)
+	app.Get("/get_all_users", middleware.Protected(), controllers.GetAllUsers)
 }

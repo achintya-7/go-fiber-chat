@@ -10,6 +10,7 @@ func main() {
 
 	app := fiber.New()
 
+
 	configs.ConnectDB()
 
 	app.Get("/", func(c *fiber.Ctx) error {
